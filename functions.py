@@ -173,7 +173,7 @@ def trier_depenses_compte(compte,categorie):
     for i in compte.depenses:
         if i.categorie==categorie:
             depenses_inter.append(i)
-    sorted(depenses_inter,key=lambda depenses: depenses.date)
+    depenses_inter.sort(key=lambda item:item.date)
     return(depenses_inter)
     
 # =============================================================================
