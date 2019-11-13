@@ -75,6 +75,14 @@ def lecture(key):
     compte_inter=pickle.load(f)
     f.close()
     return(compte_inter)
+
+# Lecture de tous les comptes dans une liste
+def lecture_liste_compte():
+    global key_list
+    list_comptes = []
+    for key in key_list:
+        list_comptes.append(lecture(key))
+    return list_comptes
 # =============================================================================
 
 # =============================================================================
