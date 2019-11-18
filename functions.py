@@ -6,6 +6,7 @@ Created on Tue Oct 22 13:46:31 2019
 """
 
 import sys
+import os
 import pickle
 import time
 import datetime as dt
@@ -24,6 +25,9 @@ class compte:
         self.credit=None
         self.interest=None
         self.depenses_auto=[]
+        
+    def get_key(self):
+        return(self.__key)
         
     def new_doc(self):
         try:
@@ -83,8 +87,35 @@ def lecture_liste_compte():
     for key in key_list:
         list_comptes.append(lecture(key))
     return list_comptes
-# =============================================================================
 
+# Ecriture d'un compte à partir de chaine de caractère
+def creation_compte(nom,typ,montant,credit,interet):
+    if (nom is not '') and (typ is not '') and (montant is not ''):
+        montant = float(montant)
+        if (credit is '') or (credit == 'Optionnel'):
+            credit = None
+        else:
+            credit = float(credit)
+        if (interet is '') or (interet == 'Optionnel'):
+            interet = None
+        else:
+            interet = float(interet)
+        new_compte = compte()
+        new_compte.init_value(nom,typ,montant,credit,interet)
+        return new_compte
+    else:
+        return None
+    
+#Suppression d'un compte des données (fichier, clé)
+def supprimer_compte(compte):
+    global key_list
+    key = compte.get_key()
+    key_list.remove(key)
+    os.remove('{}.bin'.format(key))
+    
+    
+# =============================================================================
+    
 # =============================================================================
 # Ajout depenses sur compte
 def ajout_depense(compte,depense):
@@ -203,7 +234,7 @@ def test():
     compte1.new_doc()
     
     compte2=lecture(key_list[0])
-#    print(compte2.balance, compte2.name)
+    print(compte2.balance, compte2.name)
     
     depense_automatique(compte1,"20/10/2019","20/11/2019",dt.timedelta(days=1),100,"categorie", "commentaire","entreprise")
     
@@ -239,6 +270,7 @@ def test2():
     ecriture_key_document()
     ecriture_categorie_document()
 
+
 if __name__=='__main__':
-    test()
+    #test()
     test2()
