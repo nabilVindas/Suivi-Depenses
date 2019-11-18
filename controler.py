@@ -31,7 +31,7 @@ class Controler(ControlerBase):
         fc.lecture_categorie_document()
         self.liste_comptes = fc.lecture_liste_compte()
         # Attribues
-        self.compte:compte = None
+        self.compte = None
         
     def close(self):
         # Ecriture des données (clées, catégories, comptes)
@@ -39,3 +39,22 @@ class Controler(ControlerBase):
             c.new_doc()
         fc.ecriture_categorie_document()
         fc.ecriture_key_document()
+        
+    def select_compte_from_index(self,index_select):
+        self.compte = self.liste_comptes[index_select]
+        self.refreshAll()
+        
+    def nouveau_compte(self,nom,typ,montant,credit,interet):
+        compte = fc.creation_compte(nom,typ,montant,credit,interet)
+        if compte is None:
+            return 0
+        else:
+            self.compte = compte
+            self.liste_comptes.append(compte)
+            self.refreshAll()
+            return 1
+        
+    def delete_compte(self):
+        fc.supprimer_compte(self.compte)
+        self.liste_comptes.remove(self.compte)
+        self.compte = None
