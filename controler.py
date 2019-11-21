@@ -40,6 +40,12 @@ class Controler(ControlerBase):
         fc.ecriture_categorie_document()
         fc.ecriture_key_document()
         
+    def get_key_list(self):
+        return fc.key_list
+        
+    def get_categorie_list(self):
+        return fc.categorie_list
+        
     def select_compte_from_index(self,index_select):
         self.compte = self.liste_comptes[index_select]
         self.refreshAll()
@@ -58,3 +64,12 @@ class Controler(ControlerBase):
         fc.supprimer_compte(self.compte)
         self.liste_comptes.remove(self.compte)
         self.compte = None
+        
+    def ajouter_somme_compte(self,montant,entreprise,date,categorie,com):
+        depense = fc.creation_depense(montant,entreprise,date,categorie,com)
+        if depense is None:
+            return 0
+        else:
+            fc.ajout_depense(self.compte,depense)
+            self.refreshAll()
+            return 1
