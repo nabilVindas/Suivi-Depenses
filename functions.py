@@ -88,7 +88,7 @@ def lecture_liste_compte():
         list_comptes.append(lecture(key))
     return list_comptes
 
-# Ecriture d'un compte à partir de chaine de caractère
+# Création d'un compte à partir de chaine de caractère
 def creation_compte(nom,typ,montant,credit,interet):
     if (nom is not '') and (typ is not '') and (montant is not ''):
         montant = float(montant)
@@ -121,6 +121,19 @@ def supprimer_compte(compte):
 def ajout_depense(compte,depense):
     compte.depenses.append(depense)
     compte.mise_a_jour_montant(depense.somme)
+    
+#Création d'une dépense à partir de chaine de caratère
+def creation_depense(montant,entreprise,date,categorie,commentaire):
+    if (montant is not '') and (entreprise is not ''):
+        montant = float(montant)
+        date_str = "{:02d}/{:02d}/{:04d}".format(date.day(),
+                    date.month(),date.year())
+        new_depense = depense()
+        new_depense.init_value(montant,categorie,date_str,
+                               commentaire,entreprise)
+        return new_depense
+    else:
+        return None
 # =============================================================================
 
 # =============================================================================
@@ -160,7 +173,7 @@ def virement(compte1,compte2,montant,commentaire):
 
 # =============================================================================
 #  Automatisation depenses
-def depense_automatique(compte,date_debut,date_fin,echeance,montant,categorie, commentaire,entreprise):
+def depense_automatique(compte,date_debut,date_fin,echeance,montant,categorie,commentaire,entreprise):
     date_debut=dt.datetime.strptime(date_debut,"%d/%m/%Y")
     date_fin=dt.datetime.strptime(date_fin,"%d/%m/%Y")
     date=date_debut
