@@ -460,7 +460,7 @@ class AjouterGain(QWidget):
     def click(self):
         if self.controler.ajouter_somme_compte(self.text_montant.text(),
                                                self.text_entreprise.text(),
-                                               self.text_date.date(),
+                                               self.text_date.date().toString("dd/MM/yyyy"),
                                                self.text_categorie.currentText(),
                                                self.text_commentaire.text()):
             self.close()
@@ -661,7 +661,7 @@ class VirementCompte(QWidget):
                                            self.text_compte2.currentIndex(),
                                            self.text_montant.text(),
                                            self.text_categorie.currentText(),
-                                           self.text_date.date(),
+                                           self.text_date.date().toString("dd/MM/yyyy"),
                                            self.text_commentaire1.text(),
                                            self.text_commentaire2.text()):
             self.close()

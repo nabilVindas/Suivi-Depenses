@@ -55,6 +55,10 @@ class compte:
             self.balance=self.balance+dep
         except:
             print("Error: compte inconnu")
+            
+    def __repr__(self):
+        return("<compte>:\nname->{}\ntype->{}\nmontant->{}".format(
+            self.name, self.type, self.balance))
 
 
 class depense:
@@ -76,6 +80,10 @@ class depense:
         self.commentaire=commentaire
         self.entreprise=entreprise
         self.__key=f'D{round(time.time())}'
+        
+    def __repr__(self):
+        return("<depense>:\nmontant->{}\ncategorie->{}\ndate->{}".format(
+            self.somme, self.categorie, self.date.strftime('%d/%m/%Y')))
 
 class budget:
     def __init__(self):
@@ -89,6 +97,11 @@ class budget:
         self.somme=somme
         self.frequence=frequence
         self.debut=dt.datetime.strptime(debut,'%d/%m/%Y')
+        
+    def __repr__(self):
+        return("<budget>:\ncategorie->{}\nsomme->{}".format(
+            self.categorie, self.somme))
+
 
 class donne_bourse:
     def __init__(self):
@@ -120,6 +133,10 @@ class donne_bourse:
         self.time_zone=time_zone
         self.volume=volume
         self.capitaux=capitaux
+        
+    def __repr__(self):
+        return("<donne_bourse>:\nnom->{}\ncapitaux->{}".format(
+            self.nom, self.capitaux))
 
 # =============================================================================
 # Lecture fichier compte
@@ -175,10 +192,8 @@ def ajout_depense(compte,depense):
 def creation_depense(montant,entreprise,date,categorie,commentaire):
     if (montant is not '') and (entreprise is not ''):
         montant = float(montant)
-        date_str = "{:02d}/{:02d}/{:04d}".format(date.day(),
-                    date.month(),date.year())
         new_depense = depense()
-        new_depense.init_value(montant,categorie,date_str,
+        new_depense.init_value(montant,categorie,date,
                                commentaire,entreprise)
         return new_depense
     else:
@@ -241,9 +256,7 @@ def virement(compte1,compte2,montant,categorie,date,com1,com2):
 def creation_virement(compte1,compte2,montant,categorie,date,com1,com2):
     if (montant is not ''):
         montant = float(montant)
-        date_str = "{:02d}/{:02d}/{:04d}".format(date.day(),
-                    date.month(),date.year())
-        virement(compte1,compte2,montant,categorie,date_str,com1,com2)
+        virement(compte1,compte2,montant,categorie,date,com1,com2)
         return 1
     else:
         return 0
@@ -498,7 +511,375 @@ def test2():
     ecriture_key_document()
     ecriture_categorie_document()
 
+def test_final():
+    global key_list
+    nb_test = 0
+    nb_test_succed = 0
+    
+    #Test 1: creation d'un compte
+    nb_test += 1
+    nom = "compte test"
+    typ = "type test"
+    montant = "500"
+    credit = "Optionnel"
+    interet = ""
+    try:
+        compte_test = creation_compte(nom,typ,montant,credit,interet)
+        if ((compte_test.name == nom) &
+            (compte_test.type == typ) &
+            (compte_test.balance == float(montant)) &
+            (compte_test.credit is None) &
+            (compte_test.interest is None)):
+            print("Test 1 (create an account): SUCCED")
+            nb_test_succed += 1
+        else:
+            print("Test 1 (create an account): FAILED <result>")
+    except:
+        print("Test 1 (create an account): FAILED <system>")
+    
+    #Test 2: lecture des comptes
+    nb_test += 1
+    try:
+        compte_test.new_doc()
+        list_comptes = lecture_liste_compte()
+        compte_read = list_comptes[0]
+        if(compte_test.get_key() == compte_read.get_key()):
+            print("Test 2 (read an account): SUCCED")
+            nb_test_succed += 1
+        else:
+            print("Test 2 (read an account): FAILED <result>")
+    except:
+        print("Test 2 (read an account): FAILED <system>")
+       
+    #Test 3: supprimer comptes
+    nb_test += 1
+    try:
+        key = compte_test.get_key()
+        supprimer_compte(compte_test)
+        if ((not(os.path.exists('{}.bin'.format(key))))&
+            (not(key in key_list))):
+            print("Test 3 (delete an account): SUCCED")
+            nb_test_succed += 1
+        else:
+            print("Test 3 (delete an account): FAILED <result>")
+    except:
+        print("Test 3 (delete an account): FAILED <system>")
+    
+    #Test 4: creation d'une depense
+    nb_test += 1
+    montant1 = "-100"
+    entreprise = "entreprise test"
+    date = "01/01/2001"
+    categorie = categorie_list[2]
+    commentaire = "commentaire test"
+    try:
+        depense_test = creation_depense(montant1, entreprise, date, categorie, commentaire)
+        if((depense_test.somme == float(montant1)) &
+           (depense_test.categorie == categorie) &
+           (depense_test.date == dt.datetime.strptime(date,'%d/%m/%Y')) &
+           (depense_test.commentaire == commentaire) &
+           (depense_test.entreprise == entreprise)):
+            print("Test 4 (create an expense): SUCCED")
+            nb_test_succed += 1
+        else:
+            print("Test 4 (create an expense): FAILED <result>")
+    except:
+        print("Test 4 (create an expense): FAILED <system>")
+    
+    #test 5: ajout dépense CSV
+    nb_test += 1
+    path = "test_depense.csv"
+    with open(path,'w') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',')
+        writer.writerow([montant1,categorie,date,commentaire,entreprise])
+    try:
+        read_csv_depenses(compte_test,path)
+        depense_read = compte_test.depenses[0]
+        if((depense_read.somme == float(montant1)) &
+           (depense_read.categorie == categorie) &
+           (depense_read.date == dt.datetime.strptime(date,'%d/%m/%Y')) &
+           (depense_read.commentaire == commentaire) &
+           (depense_read.entreprise == entreprise) &
+           (compte_test.balance == float(montant)+float(montant1))):
+            print("Test 5 (append an expense CSV): SUCCED")
+            nb_test_succed += 1
+        else:
+            print("Test 5 (append an expense CSV): FAILED <result>")
+    except:
+        print("Test 5 (append an expense CSV): FAILED <system>")
+        
+    #test 6: ajout d'un budget
+    nb_test += 1
+    categorie = categorie_list[2]
+    montant2 = 1000
+    frequence = "Jour"
+    date = "01/01/2001"
+    try:
+        budget_test = budget()
+        budget_test.init_value(categorie,montant2,frequence,date)
+        ajout_budget(compte_test, budget_test)
+        budget_read = compte_test.budgets[0]
+        if((budget_read.categorie == categorie) &
+           (budget_read.somme == montant2) &
+           (budget_read.frequence == frequence) &
+           (budget_read.debut == dt.datetime.strptime(date,'%d/%m/%Y'))):
+            print("Test 6 (append a budget): SUCCED")
+            nb_test_succed += 1
+        else:
+            print("Test 6 (append a budget): FAILED <result>")
+    except:
+        print("Test 6 (append a budget): FAILED <system>")
+    
+    #test 7: lecture et ecriture key_list
+    nb_test +=1
+    lecture_key_document()          # Pour ne pas écraser
+    key_list_copy = key_list        # les données
+    key_list_test = ['CTEST']
+    try:
+        key_list = key_list_test
+        ecriture_key_document()
+        key_list = []
+        lecture_key_document()
+        if(key_list == key_list_test):
+            print("Test 7 (read & write key document): SUCCED")
+            nb_test_succed += 1
+        else:
+            print("Test 7 (read & write key document): FAILED <result>")
+    except:
+        print("Test 7 (read & write key document): FAILED <system>")
+    key_list = key_list_copy
+    ecriture_key_document()
+    key_list = []
+    
+    #test 8: ajout d'un virement
+    nb_test += 1
+    montant_virement = "100"
+    montant_init1 = 600
+    montant_init2 = 900
+    categorie = categorie_list[1]
+    date = "01/01/2001"
+    com1 = "com1 test"
+    com2 = "com2 test"
+    try:
+        compte1=compte()
+        compte1.init_value("c1","t1",montant_init1)
+        compte2=compte()
+        compte2.init_value("c2","t2",montant_init2)
+        creation_virement(compte1, compte2, montant_virement, categorie, date, com1, com2)
+        if((compte1.balance == montant_init1-float(montant_virement)) &
+           (compte2.balance == montant_init2+float(montant_virement))):
+            print("Test 8 (append a transfer): SUCCED")
+            nb_test_succed += 1
+        else:
+            print("Test 8 (append a transfer): FAILED <result>")
+    except:
+        print("Test 8 (append a transfer): FAILED <system>")
+    
+    #test 9: ajout d'une depense automatique
+    nb_test += 1
+    TEST = 1
+    debut = "01/01/2019"
+    fin = "01/01/2021"
+    ech = "00/01"
+    montant3 = "100"
+    cat = categorie_list[3]
+    com = "commentaire test"
+    ent = "entreprise test"
+    try:
+        compte_test=compte()
+        compte_test.init_value("compte test", "type test",500)
+        creation_depense_automatique(compte_test, debut, fin, ech, montant3, cat, com, ent)
+        date = dt.datetime.strptime(debut,"%d/%m/%Y")
+        for d in compte_test.depenses_auto:
+            if((d.date == date) &
+               (d.categorie == cat) &
+               (d.somme == float(montant3))):
+                TEST *= 1
+            else:
+                TEST *= 0
+            date += relativedelta(months=1)
+        if((TEST) & (date == dt.datetime.strptime(fin,"%d/%m/%Y"))):
+            print("Test 9 (append a automatic transfer): SUCCED")
+            nb_test_succed += 1
+        else:
+            print("Test 9 (append a automatic transfer): FAILED <result>")
+    except:
+        print("Test 9 (append a automatic transfer): FAILED <system>")
+    
+    #test 10: actualisation des depenses automatique
+    nb_test += 1
+    TEST = 1
+    try:
+        actualisation_depense_auto(compte_test)
+        for d in compte_test.depenses_auto:
+            if(d.date > dt.datetime.now()):
+                TEST *= 1
+            else:
+                TEST *= 0
+        for d in compte_test.depenses:
+            if(d.date <= dt.datetime.now()):
+                TEST *= 1
+            else:
+                TEST *= 0
+        if(TEST):
+            print("Test 10 (update automatic transfers): SUCCED")
+            nb_test_succed += 1
+        else:
+            print("Test 10 (update automatic transfers): FAILED <result>")
+    except:
+        print("Test 10 (update automatic transfers): FAILED <system>")
+        
+    #test 11: trier des dépenses d'une catégorie
+    nb_test += 1
+    date = "01/01/2001"
+    categorie1 = categorie_list[0]
+    montant1 = 100
+    categorie2 = categorie_list[1]
+    montant2 = 200
+    try:
+        depense1=depense()
+        depense1.init_value(montant1,categorie1,date,"","")
+        depense2=depense()
+        depense2.init_value(montant2,categorie2,date,"","")
+        ajout_depense(compte_test,depense1)
+        ajout_depense(compte_test,depense2)
+        list_dep = trier_depenses_compte(compte_test,categorie1)
+        if((len(list_dep) == 1) &
+           (list_dep[0].date == dt.datetime.strptime(date,"%d/%m/%Y")) &
+           (list_dep[0].somme == montant1) &
+           (list_dep[0].categorie == categorie1)):
+            print("Test 11 (select category expenses): SUCCED")
+            nb_test_succed += 1
+        else:
+            print("Test 11 (select category expenses): FAILED <result>")
+    except:
+        print("Test 11 (select category expenses): FAILED")
+    
+    #test 12: tri depense par date
+    nb_test += 1
+    montant1 = 100
+    cat1 = categorie_list[1]
+    date1 = "05/01/2001"
+    montant2 = 50
+    cat2 = categorie_list[2]
+    date2 = "10/01/2001"
+    montant3 = 150
+    cat3 = categorie_list[3]
+    date3 = "15/01/2001"
+    try:
+        compte_test=compte()
+        compte_test.init_value("compte test", "type test",500)
+        depense1=depense()
+        depense1.init_value(montant1,cat1,date1,"","")
+        ajout_depense(compte_test,depense1)
+        depense2=depense()
+        depense2.init_value(montant2,cat2,date2,"","")
+        ajout_depense(compte_test,depense2)
+        depense3=depense()
+        depense3.init_value(montant3,cat3,date3,"","")
+        ajout_depense(compte_test,depense3)
+        tri_dep_date(compte_test)
+        if((compte_test.depenses[0].date > compte_test.depenses[1].date) &
+           (compte_test.depenses[1].date > compte_test.depenses[2].date)):
+            print("Test 12 (sort expenses by date): SUCCED")
+            nb_test_succed += 1
+        else:
+            print("Test 12 (sort expenses by date): FAILED <result>")
+    except:
+        print("Test 12 (sort expenses by date): FAILED <system>")
+    
+    #test 13: tri depense par montant
+    nb_test += 1
+    try:
+        tri_dep_montant(compte_test)
+        if((compte_test.depenses[0].somme > compte_test.depenses[1].somme) &
+           (compte_test.depenses[1].somme > compte_test.depenses[2].somme)):
+            print("Test 13 (sort expenses by amount): SUCCED")
+            nb_test_succed += 1
+        else:
+            print("Test 13 (sort expenses by amount): FAILED <result>")
+    except:
+        print("Test 13 (sort expenses by amount): FAILED <system>")
+        
+    #test 14: tri depense par categorie
+    nb_test += 1
+    try:
+        tri_dep_categorie(compte_test)
+        if((compte_test.depenses[0].categorie < compte_test.depenses[1].categorie) &
+           (compte_test.depenses[1].categorie < compte_test.depenses[2].categorie)):
+            print("Test 14 (sort expenses by category): SUCCED")
+            nb_test_succed += 1
+        else:
+            print("Test 14 (sort expenses by category): FAILED <result>")
+    except:
+        print("Test 14 (sort expenses by category): FAILED")
+    
+    #test 15: Trouver la date de la première depense
+    nb_test += 1
+    date_init = (dt.datetime.strptime(date1,"%d/%m/%Y")-dt.timedelta(days=1)).strftime("%d/%m/%Y")
+    try:
+        date_find = find_init_date(compte_test)
+        if(date_find == date_init):
+            print("Test 15 (find first expense date): SUCCED")
+            nb_test_succed += 1
+        else:
+            print("Test 15 (find first expense date): FAILED <result>")
+    except:
+        print("Test 15 (find first expense date): FAILED <system>")
+    
+    #test 16: Trouver la liste de date et de somme
+    nb_test += 1
+    mi = 500
+    cat = categorie_list[1]
+    m1 = -100
+    date1 = (dt.datetime.now()-dt.timedelta(days=3)).strftime("%d/%m/%Y")
+    m2 = 200
+    date2 = (dt.datetime.now()-dt.timedelta(days=1)).strftime("%d/%m/%Y")
+    resultat_somme = [mi, mi+m1, mi+m1, mi+m1+m2, mi+m1+m2]
+    resultat_date = [(dt.datetime.now()-dt.timedelta(days=4-i)).
+                     strftime("%d/%m/%Y") for i in range(5)]
+    try:
+        compte_test=compte()
+        compte_test.init_value("compte test", "type test",mi)
+        depense1=depense()
+        depense1.init_value(m1,cat,date1,"","")
+        ajout_depense(compte_test,depense1)
+        depense2=depense()
+        depense2.init_value(m2,cat,date2,"","")
+        ajout_depense(compte_test,depense2)
+        (list_date,list_somme) = recup_list_historique(compte_test)
+        if((list_date == resultat_date) & (list_somme == resultat_somme)):
+            print("Test 16 (find amounts/date history): SUCCED")
+            nb_test_succed += 1
+        else:
+            print("Test 16 (find amounts/date history): FAILED <result>")
+    except:
+        print("Test 16 (find amounts/date history): FAILED <system>")
+    
+    
+    #test 17: Recuperation des listes dans une période
+    nb_test += 1
+    debut = (dt.datetime.now()-dt.timedelta(days=3)).strftime("%d/%m/%Y")
+    fin = (dt.datetime.now()-dt.timedelta(days=1)).strftime("%d/%m/%Y")
+    resultat_somme = [mi+m1, mi+m1, mi+m1+m2]
+    resultat_date = [(dt.datetime.now()-dt.timedelta(days=3-i)).
+                     strftime("%d/%m/%Y") for i in range(3)]
+    try:
+        (list_date,list_somme) = list_historique_in_range(list_date, list_somme, debut, fin)
+        if((list_date == resultat_date) & (list_somme == resultat_somme)):
+            print("Test 17 (amounts/date history in range): SUCCED")
+            nb_test_succed += 1
+        else:
+            print("Test 17 (amounts/date history in range): FAILED <result>")
+    except:
+        print("Test 17 (amounts/date history in range): FAILED <system>")
+    
+    #FIN DES TESTS
+    print("\nTest End ({:.0f}% SUCCED):\nTest Number -> {}\nTest Succed -> {}".format(
+        nb_test_succed*100/nb_test,nb_test, nb_test_succed))
+    
 
 if __name__=='__main__':
-    test()
-    # test2()
+    #test()
+    #test2()
+    test_final()

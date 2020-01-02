@@ -60,6 +60,7 @@ class Controler(ControlerBase):
         # Attribues
         try:
             self.compte = self.liste_comptes[0]
+            fc.actualisation_depense_auto(self.compte)
         except:
             self.compte = None
 
